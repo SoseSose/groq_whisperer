@@ -3,7 +3,6 @@ import tempfile
 import wave
 import pyaudio
 import keyboard
-import pyautogui
 import pyperclip
 from groq import Groq
 
@@ -77,7 +76,7 @@ def transcribe_audio(client:Groq, audio_file_path:str):
 
 def copy_to_clipboard_and_paste(text:str):
     pyperclip.copy(text)
-    pyautogui.hotkey("ctrl", "v")
+    keyboard.send("ctrl+v")
 
 def replace_hallucination(text:str):
     HALLUCINATION_TEXTS = [
@@ -103,6 +102,8 @@ def main():
     client = initialize_groq_client()
 
     while True:
+
+        
         frames = record_audio(
             trigger_key=trigger_key,
             SAMPLE_RATE=SAMPLE_RATE,
