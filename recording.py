@@ -66,7 +66,6 @@ if __name__ == "__main__":
     audio += 20
     audio.export(audio_file_path, format="wav")
 
-    
     wf = wave.open(audio_file_path, 'rb')
     p = pyaudio.PyAudio()
     stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
