@@ -1,8 +1,8 @@
 import flet as ft
 import asyncio
 
-class Countdown(ft.Text):
 
+class Countdown(ft.Text):
     def __init__(self, seconds):
         super().__init__()
         self.seconds = seconds
@@ -23,8 +23,6 @@ class Countdown(ft.Text):
             await asyncio.sleep(1)
             self.seconds -= 1
 
-def main_countdown(page: ft.Page):
-    page.add(Countdown(120), Countdown(60))
 
 
 def main(page: ft.Page):
@@ -38,8 +36,7 @@ def main(page: ft.Page):
     page.window.title_bar_hidden = True
     page.window.title_bar_buttons_hidden = True
 
-
-    #いらないかも
+    # いらないかも
     minimize_button = ft.IconButton(
         icon=ft.icons.REMOVE,
         icon_color=ft.colors.WHITE,
@@ -58,9 +55,8 @@ def main(page: ft.Page):
         on_click=lambda _: page.window.close(),
     )
 
-    counter = 0
     text_area = ft.Container(
-        content = Countdown(100),
+        content=Countdown(100),
         bgcolor=ft.colors.WHITE,
         border_radius=ft.border_radius.all(10),
         padding=10,
@@ -78,7 +74,6 @@ def main(page: ft.Page):
             top_row,
             ft.Container(height=10),
             text_area,
-            # Countdown(10),
         ],
         expand=True,
         alignment=ft.MainAxisAlignment.CENTER,
@@ -86,6 +81,6 @@ def main(page: ft.Page):
 
     page.add(content)
 
+
 if __name__ == "__main__":
     ft.app(target=main)
-    # ft.app(target=main_countdown)
