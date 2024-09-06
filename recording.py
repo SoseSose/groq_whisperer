@@ -1,5 +1,4 @@
 import pyaudio
-import numpy as np
 import tempfile
 import wave
 
@@ -47,6 +46,8 @@ if __name__ == "__main__":
     import time
     record_time = 3
     start_time = time.time()
+    time.sleep(1)
+
     for i in range(1, int(44100 / 1024 * record_time)):
         data = recorder.get_sound()
         frames.append(data)
@@ -62,6 +63,8 @@ if __name__ == "__main__":
     CHUNK_SIZE = 2**10
 
     from pydub import AudioSegment
+    from pydub.utils import which
+    AudioSegment.converter = which("ffmpeg")
     audio = AudioSegment.from_wav(audio_file_path)
     audio += 20
     audio.export(audio_file_path, format="wav")

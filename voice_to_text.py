@@ -56,5 +56,11 @@ class VoiceToText:
             client=self.client,
             audio_file_path=audio_file_path,
         )
-        os.unlink(audio_file_path)
+        # os.unlink(audio_file_path)
         return transcription
+
+if __name__ == "__main__":
+    vtt = VoiceToText()
+    transcription = vtt.transcribe_audio("こんにちは.wav")
+    # print(transcription)
+    assert transcription == "こんにちは"
