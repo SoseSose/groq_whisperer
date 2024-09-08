@@ -22,7 +22,6 @@ class Recorder:
 
     def get_sound(self):
         data = self.stream.read(self.CHUNK, exception_on_overflow=False)
-        # data = np.frombuffer(data, dtype="int16") / float((np.power(2, 16) / 2) - 1)
         return data
 
     def stop(self):

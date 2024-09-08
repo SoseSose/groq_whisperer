@@ -1,66 +1,66 @@
-import os
-from groq import Groq
+from wav_to_text import VoiceToText
+from voice_to_wav import Recorder
+from queue import Queue
+import threading
 
-def read_api_key(file_path="key.txt"):
-    try:
-        with open(file_path, "r") as file:
-            return file.read().strip()
-    except (FileNotFoundError, IOError) as e:
-        print(f"Error reading API key: {e}")
-        return None
+class StreamingV2T:
+    def __init__(self, channels:int, sample_rate:int, chunk:int, record_time:int):
+        self.text:str = ""
+        self.channels = channels
+        self.sample_rate = sample_rate
+        self.chunk = chunk
+        self.record_time = record_time
+        self.running = False
 
+    def stop_update_text(self):
+        print("stop_update_text")
+        self.running = False
 
-def initialize_groq_client():
-    api_key = read_api_key()
-    if not api_key:
-        print("Failed to initialize Groq client. Exiting.")
-        exit(1)
-    return Groq(api_key=api_key)
+    def start_update_text(self):
+        print("start_update_text")
+        self.running = True
+        queue = Queue()
 
+        recorder = Recorder(channels=self.channels, sample_rate=self.sample_rate, chunk=self.chunk)
+        save_audio_fn = recorder.save_audio
 
-def transcribe_audio(client:Groq, audio_file_path:str):
-    try:
-        with open(audio_file_path, "rb") as file:
-            return client.audio.transcriptions.create(
-                file=(os.path.basename(audio_file_path), file.read()),
-                model="whisper-large-v3",
-                response_format="text",
-                language="ja",
-            )
-    except Exception as e:
-        print(f"Transcription error: {e}")
-        return None
+        def record_fn():
 
-def replace_hallucination(text:str):
-    HALLUCINATION_TEXTS = [
-        "ご視聴ありがとうございました", "ご視聴ありがとうございました。",
-        "ありがとうございました", "ありがとうございました。",
-        "どうもありがとうございました", "どうもありがとうございました。",
-        "どうも、ありがとうございました", "どうも、ありがとうございました。",
-        "おやすみなさい", "おやすみなさい。",
-        "Thanks for watching!",
-        "終わり", "おわり",
-        "お疲れ様でした", "お疲れ様でした。",
-    ]
-    for hallucination_text in HALLUCINATION_TEXTS:
-        text = text.replace(hallucination_text, "")
-    return text
+            while self.running:
+                data = recorder.get_sound()
+                queue.put(data)
 
+        def v2t_fn():
+            v2t = VoiceToText()
+            max_sound_window_len = self.record_time * self.sample_rate // self.chunk 
+            sound_window = []
 
-class VoiceToText:
-    def __init__(self):
-        self.client = initialize_groq_client()
+            while self.running:
+                if not queue.empty():
+                    sound_window.append(queue.get())
+                    sound_window    
+                    if len(sound_window) >= max_sound_window_len:
+                        sound_window = sound_window[1:]
+                    f_name = save_audio_fn(sound_window)
 
-    def transcribe_audio(self, audio_file_path:str):
-        transcription = transcribe_audio(
-            client=self.client,
-            audio_file_path=audio_file_path,
-        )
-        # os.unlink(audio_file_path)
-        return transcription
+                    text = v2t.transcribe_audio(f_name)
+                    print(text)
+                    self.text = text
+
+        record_thread = threading.Thread(target=record_fn)
+        record_thread.start()
+        v2t_thread = threading.Thread(target=v2t_fn)
+        v2t_thread.start()
+
 
 if __name__ == "__main__":
-    vtt = VoiceToText()
-    transcription = vtt.transcribe_audio("こんにちは.wav")
-    # print(transcription)
-    assert transcription == "こんにちは"
+    SAMPLE_RATE = 16000
+    CHANNELS = 1
+    CHUNK = 1024 * 10
+    record_time = 10
+    streming_v2t = StreamingV2T(channels=CHANNELS, sample_rate=SAMPLE_RATE, chunk=CHUNK, record_time=record_time)
+    streming_v2t.start_update_text()
+    import time
+    time.sleep(10)
+    streming_v2t.stop_update_text()
+
